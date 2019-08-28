@@ -9,4 +9,4 @@ These plugins may interact using the DenKrement / DenKr_essentials possiblities.
 Also Python Scripts can communicate with a running DenKrement, if the plugin "DenKrement_plugin_predefined__connect_external_Python" is present and the Python Script is using "DenKrement_extern_Python"
 
 
-As a NOTE: I personally use <Eclipse> as IDE. With this you can Link to one and the same Copy of "DenKr_essentials" from different Projects.
+As a NOTE: I personally use »Eclipse« as IDE. With this you can Link to one and the same Copy of "DenKr_essentials" from different Projects.
