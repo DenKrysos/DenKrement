@@ -46,35 +46,65 @@
 #include "DenKr_essentials/PreC/DenKr_PreC.h"
 //#include "DenKr_essentials/auxiliary.h"
 #include "DenKr_essentials/multi_threading.h"
+#if defined(DENKR_ESSENTIALS__DL_LIBS__NONE)
+#elif defined(DENKR_ESSENTIALS__DL_LIBS__MAIN_APP)
+	#include "plugins/export/plugins_DenKr_essentials__common.h"
+#elif defined(DENKR_ESSENTIALS__DL_LIBS__PLUGIN_PREDEFINED)
+	//Be cautious with the Resource-Linking (Eclipse) and include-paths (compiler arguments), when compiling a Plugin with set global Value
+	#include "plugins_DenKr_essentials__common.h"
+#elif defined(DENKR_ESSENTIALS__DL_LIBS__PLUGIN_GENERIC)
+	//Generic Plugins/Modules at least need to know the "generic"-role and stuff like the working-modes
+	#include "plugins_DenKr_essentials__common.h"
+#else
+	#pragma error "ERROR: Define either DENKR_ESSENTIALS__DL_LIBS__MAIN_APP or DENKR_ESSENTIALS__DL_LIBS__PLUGIN inside <global/global_settings.h>"
+	ERROR"ERROR: Define either DENKR_ESSENTIALS__DL_LIBS__MAIN_APP or DENKR_ESSENTIALS__DL_LIBS__PLUGIN inside <global/global_settings.h>"
+#endif
 //==================================================================================================//
 //==================================================================================================//
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //--------------------------------------------------------------------------------------------------//
 //==================================================================================================//
 
+//TODO: Frameworkarize this better. Define a std-path under which such a File should reside and define a naming convention that is more directed towards DenKr_ instead of DenKrement.
+//  Then outsource parts of this into DenKr_essentials, just like done (or also to be done yet? -.-) for the Predefined Plugin Roles
+//  Then change the include path into the "multi_threading.h" to this new file(s) (Currently there is this one here inlcuded)
 
 
 
 
 
-// These are used for the pthread_t - Array and also as Indices with the Shared-Memory Array
-#define DENKREMENT_THREAD__GUI                                        0
-#define DENKREMENT_THREAD__CONTEXT_BROKER                             INC(DENKREMENT_THREAD__GUI)
-#define DENKREMENT_THREAD__CONTEXT_BROKER__EXTERN_CONNECTOR_PYTHON    INC(DENKREMENT_THREAD__CONTEXT_BROKER)
-#define DENKREMENT_THREAD__SDN_CTRL_COM                               INC(DENKREMENT_THREAD__CONTEXT_BROKER__EXTERN_CONNECTOR_PYTHON)
-#define DENKREMENT_THREAD__SDN_CTRL_COM_LISTEN                        INC(DENKREMENT_THREAD__SDN_CTRL_COM)
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define DENKREMENT_THREAD__SDN_LINK_MONITORING               INC(DENKREMENT_THREAD__SDN_CTRL_COM_LISTEN)
-#define DENKREMENT_THREAD__NETWORK_TOPOLOGY_DISCOVERY        INC(DENKREMENT_THREAD__SDN_LINK_MONITORING)
-//Use this at initialization of the Array: (This is a quantity, the above are IDs)
-#define DENKREMENT_THREADS__MAX_PREDEF                       INC(DENKREMENT_THREAD__NETWORK_TOPOLOGY_DISCOVERY)
 
-//This is especially done to be able to differentiate the Array for pthread_t Handling-IDs
-// and the Array to store the Shared-Memory Headers in.
-//Because the pthread_t Array doesn't need an Entry for the 'main', the basic Program-Thread.
-//But the ShMem-Array can/could hold a ShMem-Header for communication with this.
-#define DENKREMENT_THREAD__MAIN                              DENKREMENT_THREADS__MAX_PREDEF
-#define DENKREMENT_THREADS__SHMEM_MAX                        INC(DENKREMENT_THREAD__MAIN)
+
+//Explanation:
+//Inside "plugins/export/plugins_DenKr_essentials__common.h" the List of predefined Plugin-roles is defined (mandatory plugins that are supposed to be existent, actually intended to be required; handled differently and separately from generic plugins)
+//First, this List becomes prefixed with "DenKrement_Thread__"
+//Then, this is inserted into the enum of all Thread Indices of DenKrement
+
+//Append the Prefix
+#define DENKREMENT_THREAD_CONCAT_PREFIX_(ARG) DenKrement_Thread__ ## ARG
+#define DenKrement_Thread_Plugin_ENTRIES_ CALL_MACRO_X_FOR_EACH__LIST(DENKREMENT_THREAD_CONCAT_PREFIX_,DenKr_plugin_roles_ENTRIES)
+//A little Trick, which automagically decides, if a trailing comma is necessary
+#define DenKrement_Thread_Plugin_ENTRIES__appendCOMMA DenKrement_Thread_Plugin_ENTRIES_,
+#define DenKrement_Thread_Plugin_ENTRIES__ \
+		IF(EQUAL(COUNT_VARARGS(DenKr_plugin_roles_ENTRIES),0))(\
+		)IF(NOT_EQUAL(COUNT_VARARGS(DenKr_plugin_roles_ENTRIES),0))(\
+			DenKrement_Thread_Plugin_ENTRIES__appendCOMMA\
+		)
+
+typedef enum DenKrement_Thread_IDC_t{
+	//Own Threads of DenKrement. Fixed. Straightly included in DenKrement itself
+	DENKREMENT_THREAD__MAIN=0,
+	DENKREMENT_THREAD__GUI,
+	DENKREMENT_THREAD__CONTEXT_BROKER,//A Thread/module called 'CONTEXT_BROKER__EXTERN_CONNECTOR_PYTHON' for allowing external running Python Scripts to connect to the Context Broker is done in Form of a predefined Plugin
+	//===================================================================
+	//predefined Plugin Roles are automatically filled in here
+	DenKrement_Thread_Plugin_ENTRIES__
+	//===================================================================
+	//Use this at initialization of the Array: (This is a quantity, the above are IDs)
+	DENKREMENT_THREADS__MAX_PREDEF,
+	//===================================================================
+	DENKREMENT_THREADS__SHMEM_MAX = DENKREMENT_THREADS__MAX_PREDEF
+}DenKrement_Thread_IDC;
 
 
 

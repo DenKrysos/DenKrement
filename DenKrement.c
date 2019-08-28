@@ -78,7 +78,6 @@
 //---------------------------------------------------------------------------------
 #include "auxiliary/support_main.h"
 #include "DenKrement_threads.h"
-#include "SDN/controller/SDN_Ctrl_communication.h"
 #include "files/config/DenKrement_cfg_files.h"
 #include "plugins/DenKrement_plugins.h"
 #include "plugins/export/plugins_export.h"
@@ -98,6 +97,13 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 //--------------------------------------------------------------------------------------------------//
 //==================================================================================================//
+
+/* Documentation:
+ *   (veeeery incomplete...)
+ * - The cfg-File has an entry "GUI_Thread"
+ *    -> enabled  -- GUI Threads works completely
+ *    -> disabled  -- It immediately terminates, i.e. it is not in use. (Starts no GTK Window at all)
+ */
 
 
 
@@ -125,12 +131,26 @@ int main(int argc, char **argv) {
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  As a funny startup.  -----------------------------------------------------------------------//
-    //----  Really totally not of any use...  ----------------------------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//----  "Special" (not production grade) Section, for Demonstration of the Framework  --------------//
+	//-- In other words: This shit here can be safely deleted, in case you are changing the Setup
+	//==================================================================================================//
+	//For Demonstration-purpose of the ability to pass "additional/optional" arguments to Plugins with 'predefined roles', besides the every time passed default ones.
+	//  This one's for the Example Plugin "Some_Dummy"
+	int testaddArg = 3;
+	//====================================================================================================
+	//====================================================================================================
+
+
+
+
+
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  As a funny startup.  -----------------------------------------------------------------------//
+	//----  Really totally not of any use...  ----------------------------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	{
 		CREATE_argv(printf_bulb,"print","pokemon","bulbasaur");
 		CREATE_argv(printf_starter,"print","pokemon","starter","1stGen");
@@ -140,19 +160,18 @@ int main(int argc, char **argv) {
 		err=Cmd_Line_Mux_funny(4,printf_starter);
 		printf("Fine... Now we can start:\n");
 		system("clear");
-
 	}
 
 
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  Initialization of the DenKr_essentials-Library  --------------------------------------------//
-    //----  Enables some Paths, Checks System-Endianess, Terminal ANSI-Escape  -------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  Initialization of the DenKr_essentials-Library  --------------------------------------------//
+	//----  Enables some Paths, Checks System-Endianess, Terminal ANSI-Escape  -------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	DenKr_essentials_Init(argc, argv);
 	#ifdef DENKR_ESSENTIALS_AUXILIARY_H
 		printfc(yellow,"Program Name:\n");printf("%s\n",ProgramName);
@@ -165,11 +184,11 @@ int main(int argc, char **argv) {
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  Start of the Command-Line Multiplexing  ----------------------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  Start of the Command-Line Multiplexing  ----------------------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	//For now just to intercept some stuff "not really for valuable use", but just additional funny stuff
 	//Maybe later on can be extended and the other Code will be integrated; certainly not.
 	#ifdef SECRET_DENKREMENT_FUNNY_H
@@ -188,55 +207,58 @@ int main(int argc, char **argv) {
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  Config-Files  ------------------------------------------------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
-    //----  Initializes the global char [][] cfg_files_v_gl,
-    //----       Checks for the Presence of Config-Files,
-    //----       Eventually creates Default-Config-Files, if one doesn't already exist
-    //--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  Config-Files  ------------------------------------------------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
+	//----  Initializes the global char [][] cfg_files_v_gl,
+	//----       Checks for the Presence of Config-Files,
+	//----       Eventually creates Default-Config-Files, if one doesn't already exist
+	//--------------------------------------------------------------------------------------------------//
 	// Creates cfg_files_v, usable like argv, with 'DENKREMENT_CFG_FILES_QUANTITY' as max Value
 	#define cfg_files_v ((char **)cfg_files_v_)
 	create_cfg_files_argv
-    //--------------------------------------------------------------------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
 	// Presence Checking and eventually Default-Creation
 	cfg_files_init_and_default(cfg_files_v);
+	// Read Config Files
+	struct config_main cfg_main;
+	cfg_file__main__read_complete(&cfg_main, cfg_files_v);
 
 
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  Dynamically Loaded Libraries (DL Lib, DLL, DSO [Dynamic Shared Object], '.so')  ------------//
-    //----  Plugins  -----------------------------------------------------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  Dynamically Loaded Libraries (DL Lib, DLL, DSO [Dynamic Shared Object], '.so')  ------------//
+	//----  Plugins  -----------------------------------------------------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	//----------------------------------------------------------------------------------------------
 	// Initialize Plugin-Manager, Plugin-Handle-Manager
 	// Load and Register Plugins
 	PluginManager* plugman;
 	PluginManager_init(&plugman);
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	DL_Libs_plugins_discover_folder(plugman,ProgPath,ProgPath_length,DENKREMENT_PLUGINS_SUBFOLDER,sizeof(DENKREMENT_PLUGINS_SUBFOLDER)-1);
 
 
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  ShMem, Inter-Thread, Thread-Handling, Synchronization  -------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  ShMem, Inter-Thread, Thread-Handling, Synchronization  -------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	//----------------------------------------------------------------------------------------------
 	// Initialize Shared-Memory, Thread-Management/Synchronization-Structures, Semaphores
 	#define shmem_recv_start_self ShMem_recv_start(&(shmem_headers[DENKREMENT_THREAD__MAIN]))
 	#define shmem_recv_finish_self ShMem_recv_finish(&(shmem_headers[DENKREMENT_THREAD__MAIN]))
 	#define shmem_self (shmem_headers[DENKREMENT_THREAD__MAIN])
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	ThreadManager* thrall;
 	DenKr_ThreadManager_init(&thrall,DENKREMENT_THREADS__MAX_PREDEF);
 	//TODO: Adjust to number of loaded dynamic DLLs
@@ -291,16 +313,16 @@ int main(int argc, char **argv) {
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  Threads  -----------------------------------------------------------------------------------//
-    //----  Start, Init, Get-Ready, Synchronized Start-of-Work  ----------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  Threads  -----------------------------------------------------------------------------------//
+	//----  Start, Init, Get-Ready, Synchronized Start-of-Work  ----------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	//--------------------------------------------------------------------------------------------------
 	// - - - - - Start Threads - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //- - The Context-Broker / Information-Dispenser  --------------------------------------------------//
+	//- - The Context-Broker / Information-Dispenser  --------------------------------------------------//
 	//- -   used as central Unit, enables nice and easy Inter-Thread/Module/Program-Communication  -----//
 	#define TO_DEFINE__DENKR_MAIN_THREAD_ID DENKREMENT_THREAD__MAIN
 	#define TO_DEFINE__DENKR_CONTEXTBROKER_THREAD_ID DENKREMENT_THREAD__CONTEXT_BROKER
@@ -359,20 +381,20 @@ int main(int argc, char **argv) {
 	InfBrok_Iface.hidden.send_to_Broker=&SockToBrok;
 	InfBrok_Iface.hidden.ownID=DENKREMENT_THREAD__MAIN;
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //- - Graphical User Interface (GUI)  --------------------------------------------------------------//
-    //- -   Does all the Stuff inside the Thread: Start, Load Layout-File, Build, Run Main-Loop  -------//
+	//- - Graphical User Interface (GUI)  --------------------------------------------------------------//
+	//- -   Does all the Stuff inside the Thread: Start, Load Layout-File, Build, Run Main-Loop  -------//
 	GUI_START_THREAD
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //- - RYU Controller Connect  ----------------------------------------------------------------------//
-//	SDN_CTRL_COM_START_THREAD
-	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //- - Specific, predefined Roles  ------------------------------------------------------------------//
-	//      Module that enables external running Modules, written in Python to connect to the internal ContextBroker (imported from Plugin)
-	CONTEXTBROKER_connect_external_Python_START_THREAD
-	//      Link Monitoring, based on SDN Methods (imported from Plugin)
-	SDN_LINK_MONITORING_START_THREAD
-	//      Network Topology Discovery, using SDN (imported from Plugin)
-	NETWORK_TOPOLOGY_DISCOVERY_START_THREAD
+	//- - Specific, predefined Roles  ------------------------------------------------------------------//
+	//      - For more Info, have look into "src/plugins/export/plugins_DenKr_essentials__common.h"  &  "src/plugins/export/plugins_export.h"
+	DenKr_Thread_start_predefineds__PREP_ADDARGS//This Macro creates the Variable "addarg_arr"
+	DenKr_Thread_start_predefineds(plugman, thrall, DENKREMENT_THREAD__MAIN, shmem_headers, &SockToBrok, addarg_arr);
+	DenKr_Thread_start_predefineds__PREP_ADDARGS_EOC
+									//	CONTEXTBROKER_connect_external_Python_START_THREAD
+									//	//      Link Monitoring, based on SDN Methods (imported from Plugin)
+									//	SDN_LINK_MONITORING_START_THREAD
+									//	//      Network Topology Discovery, using SDN (imported from Plugin)
+									//	NETWORK_TOPOLOGY_DISCOVERY_START_THREAD
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	//- - Start the generic Module-Threads  ------------------------------------------------------------//
 	DenKr_Thread_start_generics(plugman, thrall, DENKREMENT_THREAD__MAIN, shmem_headers, &SockToBrok);
@@ -396,7 +418,7 @@ int main(int argc, char **argv) {
 	{
 		//An Array, that contains the Thread-IDs of the spawned Threads. This becomes passed as a Pointer, to make it generic against dynamically loaded plugins
 		//   You can set this Array manually
-//		DenKr_essentials_ThreadID spawned_threads[]={DENKREMENT_THREAD__GUI,DENKREMENT_THREAD__SDN_CTRL_COM,DENKREMENT_THREAD__SDN_CTRL_COM_LISTEN};
+		//DenKr_essentials_ThreadID spawned_threads[]={DENKREMENT_THREAD__GUI,DENKREMENT_THREAD__SDN_CTRL_COM,DENKREMENT_THREAD__SDN_CTRL_COM_LISTEN};
 		//   Or use the provided function. This uses the Data-Structures also provide by DenKr_essentials
 		//      that helps you Tracking, which Threads are actually running (Basic, Predefined, Generic)
 		DenKr_Threads_Main_Ready_Init(thrall, shmem_headers, DENKREMENT_THREAD__MAIN);
@@ -409,12 +431,12 @@ int main(int argc, char **argv) {
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  ShMem-Communication  -----------------------------------------------------------------------//
-    //----  Consider this as the 'Main-Operation' of the Main-Thread  ----------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  ShMem-Communication  -----------------------------------------------------------------------//
+	//----  Consider this as the 'Main-Operation' of the Main-Thread  ----------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
 	//----------------------------------------------------------------------------------------------
 	while(1){
 		shmem_recv_start_self;
@@ -457,25 +479,28 @@ int main(int argc, char **argv) {
 
 
 
-    //==================================================================================================//
-    //--------------------------------------------------------------------------------------------------//
-    //----  Program-Termination Sequence  --------------------------------------------------------------//
-    //--------------------------------------------------------------------------------------------------//
-    //==================================================================================================//
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //Instruct the appropriate Threads to stop working and terminate
-    //   Tell the SDN-Ctrl Communication Sending Thread to Terminate (and to handle the Termination of its related Listen-Thread
-    ShMem_send_start(&(shmem_headers[DENKREMENT_THREAD__SDN_CTRL_COM]), 0, SHMEM_MSG_TYPE__CANCEL_THREAD);
-    //-------- No content.
-	ShMem_send_finish(&(shmem_headers[DENKREMENT_THREAD__SDN_CTRL_COM]));
+	//==================================================================================================//
+	//--------------------------------------------------------------------------------------------------//
+	//----  Program-Termination Sequence  --------------------------------------------------------------//
+	//--------------------------------------------------------------------------------------------------//
+	//==================================================================================================//
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	//Instruct the appropriate Threads to stop working and terminate
+					//	//=== A Template for send a Termination-Signal via the Shared-Memory Method to a running thread (in this case a straightly included Thread, i.e. not via plugin/DLL-library)
+					//	//====== Using this, a Thread obviously must implement the recognition of such messages and a proper termination Sequence. After sending this, the main should join the Thread before Main-Termination. How is shown below the Signal-Sending, or better said, far further below.
+					//	//   Tell the <NAMEofIt> Thread to Terminate (and to handle the Termination of its related Listen-Thread
+					//	ShMem_send_start(&(shmem_headers[DENKREMENT_THREAD__NAMEofIt]), 0, SHMEM_MSG_TYPE__CANCEL_THREAD);
+					//	//-------- No content.
+					//	ShMem_send_finish(&(shmem_headers[DENKREMENT_THREAD__NAMEofIt]));
 	//   Tell the Context-Broker to terminate (using it's own Communication Method, instead of ShMem)
 	DenKr_ContextBroker_send_onlyHeader(&InfBrok_Iface,DenKr_InfBroker_Msg_Type__Management,DenKr_InfBroker_Msg_SubType__Management_Restricted__Termination,0);
-	//TODO: Termination of the connect_external_Python Module. Than uncomment the Join below
+	//TODO: Termination of the connect_external_Python Module. Then uncomment the Join below
+	//    Update: Tell every (running...) predefined plugin to terminate. Than add a join below. Maybe check with some communication protocol, if a predefined plugin properly implemented a termination sequence handling. If not so: Just kill the thread and termiante the main Program without join. To make it even better: Implement a timeout; if a plugin-thread has not terminated after this period: same thing, kill it and terminate. To make even this even better: Implement a "plugin-container" which runs the plugins in an own process, outside of the main program.
 	//TODO: Kill the generic Modules/Threads with the "Wooden Mallet", since we cannot safely assume/control that they implement an appropriate Termination-Method/Sequence
 	//      Or maybe just start them detached and terminate the main()...
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	//Decided to NOT do it like this:
 	// Cause that would be a bit of a waste. Main doesn't have to wait for every Thread,
 	// because some Threads already wait for others.
@@ -489,10 +514,10 @@ int main(int argc, char **argv) {
 	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__GUI],NULL);
 	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__CONTEXT_BROKER],NULL);
 //	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__CONTEXT_BROKER__EXTERN_CONNECTOR_PYTHON],NULL);
-	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__SDN_CTRL_COM],NULL);
-	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__SDN_LINK_MONITORING],NULL);
-	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__NETWORK_TOPOLOGY_DISCOVERY],NULL);
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+					//	//=== Rest of Termination-Template
+					//	pthread_join((thrall->allThreads)[DENKREMENT_THREAD__NAMEofIt],NULL);
+	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	printf("\nDenKrement: Exiting with Error-Code: %d\n",err);
 	pthread_exit(NULL);
 	#undef shmem_recv_start_self

@@ -71,8 +71,43 @@ int cfg_file__main__create_default(){
 
 }
 
-int cfg_file__main__read_complete(){
+int cfg_file__main__read_complete(struct config_main* ret, char** cfg_files_v){
+	int err=0;
 
+	char* cfgf_path=cfg_files_v[DENKREMENT_CFG_FILE_IDX_MAIN];
+	char* GUI_Thread_val=NULL;
+
+	config_file_read_variadic(cfgf_path,
+								DKess_cfg_type_INT, "Debugging", &(ret->debugging),
+								DKess_cfg_type_BUF, "GUI_Thread", &GUI_Thread_val,
+								DKess_cfg_type_INT, "ContextBroker_Debugging", &(ret->contextbroker_debugging)
+							);
+
+	switch(err){
+	case FILE_ERR_NOT_EXISTING:
+	case MAIN_ERR_FUNC_INCOMPLETE:
+		exit(MAIN_ERR_BAD_RUN);
+		break;
+	default:
+		break;
+	}
+
+	if(strcmp(GUI_Thread_val,"disabled")==0){
+		ret->threadUsed=0;
+	}else if(strcmp(GUI_Thread_val,"enabled")==0){
+		ret->threadUsed=1;
+	}else{
+		printfc(red,"Error:");printf(" While reading Main-cfg File. Invalid Value at \"#GUI_Thread\". Exiting...\n");
+		exit(FILE_CFG_ERR_VALUE_INVALID);
+	}
+
+	printf("Finished reading Main-Cfg File \"%s\". Values:\n",cfg_files_v[DENKREMENT_CFG_FILE_IDX_MAIN]);
+	printf("\tDebugging: %d\n",ret->debugging);
+	printf("\tGUI-Thread: %d   (0: disabled, 1: enabled)\n",ret->threadUsed);
+	printf("\tContextBroker-Debugging: %d   (0: disabled, 1: enabled)\n",ret->contextbroker_debugging);
+	puts("");
+
+	return err;
 }
 
 int cfg_file__main__write_value(){
@@ -159,7 +194,14 @@ int cfg_file__main__read_value(){
 		 \
 	SWITCH( \
 		EQUAL(FILE_DEFINE,DENKREMENT_CFG_FILE_IDX_MAIN), \
-			; \
+			fprintf(cfgf, "\n//Debug-Level. Proper Documentation TODO."); \
+			DENKR_ESSENTIALS_CFG_FILE_VALUE_WRITE_DEFAULT_INT("Debugging",0); \
+			fprintf(cfgf, "\n//Tells, if the GUI-Thread shall be used. Valid Values: (default: \"disabled\")"); \
+			fprintf(cfgf, "\n//\t- \"enabled\"  -- GUI-Thread is used. Starts a GTK+ Window."); \
+			fprintf(cfgf, "\n//\t- \"disabled\"  -- Not used. No GTK+ Usage at all."); \
+			DENKR_ESSENTIALS_CFG_FILE_VALUE_WRITE_DEFAULT_STR("GUI_Thread","disabled"); \
+			fprintf(cfgf, "\n//Context-Broker Debugging-Mode. 0  - Disabled; it operates totally silent. 1  - Enabled; it is very talkative about what it does. (default: 0)"); \
+			DENKR_ESSENTIALS_CFG_FILE_VALUE_WRITE_DEFAULT_INT("ContextBroker_Debugging",0); \
 			, \
 		EQUAL(FILE_DEFINE,DENKREMENT_CFG_FILE_IDX_SDN_CONTROLLER), \
 			char dnsserveraddrip4[]="172.10.0.100"; \

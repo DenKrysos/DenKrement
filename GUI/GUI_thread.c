@@ -65,11 +65,18 @@ void* DenKrement_thread_GUI(void* arg){
 	#define shmem_self (shmem_headers[DENKREMENT_THREAD__GUI])
 	ThreadManager* thrall = (((struct GUI_ThreadArgPassing *)arg)->thrall);
 	struct ShMemHeader *shmem_headers = (((struct GUI_ThreadArgPassing *)arg)->shmem_headers);
+	{//Scope to get rid of the "No GUI" Variable after check
+	char gui_thread_inUse = (((struct GUI_ThreadArgPassing *)arg)->threadUsed);
 	free(arg);
 //	int err;
 
 	//Tell Main, that i am Ready and than wait for Main, to tell me, that everyone is Ready.
 	DenKr_Thread_Ready_Init(shmem_headers, DENKREMENT_THREAD__MAIN, DENKREMENT_THREAD__GUI)
+	if(!gui_thread_inUse){
+		printfc(DENKR__COLOR_ANSI__THREAD_BASIC, "GUI-Thread:");printf(" Bypassed. I.e. not GUI Thread in use. (See config-File)\n");
+		goto BypassGUIThread;
+	}
+	}
 
 
 	//==================================================================================================//
@@ -89,6 +96,7 @@ void* DenKrement_thread_GUI(void* arg){
 	ShMem_send_finish(&(shmem_headers[DENKREMENT_THREAD__MAIN]));
 
 
+	BypassGUIThread:
 	printfc(yellow,"IMPORTANT:");
 	printf(" GUI Thread is closing.\n");
 

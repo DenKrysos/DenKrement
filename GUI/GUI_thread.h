@@ -68,6 +68,7 @@
 struct GUI_ThreadArgPassing {
 	ThreadManager* thrall;//The ThreadManager. Contains the two Arrays: pthread* allThreads: Mainly to start the listen thread inside. DenKr_ThreadSpawned* runningThreads: Passed to record the Listening-Thread as running;
 	struct ShMemHeader *shmem_headers;//An Array
+	char threadUsed;
 };
 
 #define GUI_START_THREAD \
@@ -81,6 +82,7 @@ struct GUI_ThreadArgPassing {
 										ThreadArgPass = malloc(sizeof(*ThreadArgPass));\
 										ThreadArgPass->thrall=thrall;\
 										ThreadArgPass->shmem_headers=shmem_headers;\
+										ThreadArgPass->threadUsed=cfg_main.threadUsed;\
 								)\
 		/*switch(return_macro_denkr_start_thread_0){}//Currently don't care about "Return" of the Macro*/\
 		}
