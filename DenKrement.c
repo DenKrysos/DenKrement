@@ -77,7 +77,7 @@
 //   Format: Use "NAME" for them  -------------------------------------------------
 //---------------------------------------------------------------------------------
 #include "auxiliary/support_main.h"
-#include "DenKrement_threads.h"
+#include "DenKr/DenKr_threads.h"
 #include "files/config/DenKrement_cfg_files.h"
 #include "plugins/DenKrement_plugins.h"
 #include "plugins/export/plugins_export.h"
@@ -260,10 +260,10 @@ int main(int argc, char **argv) {
 	#define shmem_self (shmem_headers[DENKREMENT_THREAD__MAIN])
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	ThreadManager* thrall;
-	DenKr_ThreadManager_init(&thrall,DENKREMENT_THREADS__MAX_PREDEF);
+	DenKr_ThreadManager_init(&thrall,DENKR_THREADS__MAX_PREDEF);
 	//TODO: Adjust to number of loaded dynamic DLLs
-	struct ShMemHeader shmem_headers[DENKREMENT_THREADS__SHMEM_MAX+(plugman->generic_c)];
-	ShMem_Array_Sem_init(shmem_headers,DENKREMENT_THREADS__SHMEM_MAX+(plugman->generic_c));
+	struct ShMemHeader shmem_headers[DENKR_THREADS__SHMEM_MAX+(plugman->generic_c)];
+	ShMem_Array_Sem_init(shmem_headers,DENKR_THREADS__SHMEM_MAX+(plugman->generic_c));
 
 
 
@@ -400,29 +400,14 @@ int main(int argc, char **argv) {
 	DenKr_Thread_start_generics(plugman, thrall, DENKREMENT_THREAD__MAIN, shmem_headers, &SockToBrok);
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	// - - - - - Get Everyone Ready - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	//A "Wait for Ready"-Routine
-	//When all Threads are implemented, it should look like:
+	//A "Wait for Ready"-Routine.   When all Threads are implemented, it should look like:
 	//  Start all Threads sequentially
-	//  Wait inside a ShMem Message Queue, like common inside the Threads.
-	//     Maybe use temporary state-variables
-	//  Every Thread sends a "Ready" Message after Initialization
-	//     These could be cascaded: SDN-Ctrl-Thread waits for this Message from the Listen-Thread
-	//     Main only waits for Ready-Message from the Sending-Thread
+	//  Wait inside a ShMem Message Queue, like common inside the Threads.  --  Maybe use temporary state-variables
+	//  Every Thread sends a "Ready" Message after Initialization.  --  These could be cascaded: The former existing 'SDN-Ctrl-Thread' waits for this Message from the Listen-Thread. - Main only waits for Ready-Message from the Sending-Thread
 	//  Main first continues after one Ready-Message from every Thread was received.
-	//It is done a bit more complex than just with a counter to avoid a failure like
-	// multiple Ready-Msgs from the same Thread.
-	//
-	//Something familiar is done inside the Threads as well. After the Main received a Ready from every Thread
-	// it sends a Ready to every Thread.
-	//Every Threads waits for this Ready from the main, after it sent its own Ready.
-	{
-		//An Array, that contains the Thread-IDs of the spawned Threads. This becomes passed as a Pointer, to make it generic against dynamically loaded plugins
-		//   You can set this Array manually
-		//DenKr_essentials_ThreadID spawned_threads[]={DENKREMENT_THREAD__GUI,DENKREMENT_THREAD__SDN_CTRL_COM,DENKREMENT_THREAD__SDN_CTRL_COM_LISTEN};
-		//   Or use the provided function. This uses the Data-Structures also provide by DenKr_essentials
-		//      that helps you Tracking, which Threads are actually running (Basic, Predefined, Generic)
-		DenKr_Threads_Main_Ready_Init(thrall, shmem_headers, DENKREMENT_THREAD__MAIN);
-	}
+	//- It is done a bit more complex than just with a counter to avoid a failure like multiple Ready-Msgs from the same Thread.
+	//- Something familiar is done inside the Threads as well. After the Main received a Ready from every Thread, it sends a Ready to every Thread. Every Threads waits for this Ready from the main, after it sent its own Ready.
+	DenKr_Threads_Main_Ready_Init(thrall, shmem_headers, DENKREMENT_THREAD__MAIN);
 	// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 

@@ -65,48 +65,43 @@
 //--------------------------------------------------------------------------------------------------//
 //==================================================================================================//
 
-//TODO: Frameworkarize this better. Define a std-path under which such a File should reside and define a naming convention that is more directed towards DenKr_ instead of DenKrement.
-//  Then outsource parts of this into DenKr_essentials, just like done (or also to be done yet? -.-) for the Predefined Plugin Roles
-//  Then change the include path into the "multi_threading.h" to this new file(s) (Currently there is this one here inlcuded)
-
-
-
-
-
-
 
 //Explanation:
 //Inside "plugins/export/plugins_DenKr_essentials__common.h" the List of predefined Plugin-roles is defined (mandatory plugins that are supposed to be existent, actually intended to be required; handled differently and separately from generic plugins)
 //First, this List becomes prefixed with "DenKrement_Thread__"
 //Then, this is inserted into the enum of all Thread Indices of DenKrement
+//INFO:
+// Similar procedure as explained for the predefined Plugin Roles.
+// Inside "DenKr_essentials/threads_codeGeneration.h" are some fine Macros defined, which automatically generate code, based on the defined "predefined Roles".
+// So these macros are work tightly intertwined with the stuff from "src/plugins/export/plugins_DenKr_essentials__common.h" & "src/plugins/export/plugins_export.h".
+// Amongst others, it creates an enumeration containing the Thread-IDs   »typedef enum DenKrement_Thread_IDC_t{ [...] }DenKrement_Thread_IDC;«
 
-//Append the Prefix
-#define DENKREMENT_THREAD_CONCAT_PREFIX_(ARG) DenKrement_Thread__ ## ARG
-#define DenKrement_Thread_Plugin_ENTRIES_ CALL_MACRO_X_FOR_EACH__LIST(DENKREMENT_THREAD_CONCAT_PREFIX_,DenKr_plugin_roles_ENTRIES)
-//A little Trick, which automagically decides, if a trailing comma is necessary
-#define DenKrement_Thread_Plugin_ENTRIES__appendCOMMA DenKrement_Thread_Plugin_ENTRIES_,
-#define DenKrement_Thread_Plugin_ENTRIES__ \
-		IF(EQUAL(COUNT_VARARGS(DenKr_plugin_roles_ENTRIES),0))(\
-		)IF(NOT_EQUAL(COUNT_VARARGS(DenKr_plugin_roles_ENTRIES),0))(\
-			DenKrement_Thread_Plugin_ENTRIES__appendCOMMA\
-		)
-
-typedef enum DenKrement_Thread_IDC_t{
-	//Own Threads of DenKrement. Fixed. Straightly included in DenKrement itself
-	DENKREMENT_THREAD__MAIN=0,
-	DENKREMENT_THREAD__GUI,
-	DENKREMENT_THREAD__CONTEXT_BROKER,//A Thread/module called 'CONTEXT_BROKER__EXTERN_CONNECTOR_PYTHON' for allowing external running Python Scripts to connect to the Context Broker is done in Form of a predefined Plugin
-	//===================================================================
-	//predefined Plugin Roles are automatically filled in here
-	DenKrement_Thread_Plugin_ENTRIES__
-	//===================================================================
-	//Use this at initialization of the Array: (This is a quantity, the above are IDs)
-	DENKREMENT_THREADS__MAX_PREDEF,
-	//===================================================================
-	DENKREMENT_THREADS__SHMEM_MAX = DENKREMENT_THREADS__MAX_PREDEF
-}DenKrement_Thread_IDC;
+//USAGE:
+// Here you define your additional intrinsic Threads, which are in use for your Main-Application (excluding the »main()« itself)
+//   This might be for example a Thread for your GUI (Graphical User Interface) or a thread for the Context-Broker from DenKr_essentials
+// With "DenKr_Thread_ENTRIES_Prefix" you can define an optional Prefix, which will be literally attached to every label defined in "DenKr_Thread_ENTRIES"
+//   Just leave it blank (i.e. "#define DenKr_Thread_ENTRIES_Prefix" with nothing else in the Line), if you don't want to attach a common Phrase.
 
 
+//DenKrement specific Comment/Info (i.e. not about DenKr_essentials):
+//  DENKREMENT_THREAD__CONTEXT_BROKER: /*A Thread/module called 'CONTEXT_BROKER__EXTERN_CONNECTOR_PYTHON' for allowing external running Python Scripts to connect to the Context Broker is done in Form of a predefined Plugin*/
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//====================================================================================================
+//----------------------------------------------------------------------------------------------------
+//----  Intrinsic Threads  ---------------------------------------------------------------------------
+//----  (The definition of the Threads, that are running directly inside the Main-Program)  ----------
+//----  (I.e. ones specific for DenKrement, and not via Plugins)  ------------------------------------
+//----------------------------------------------------------------------------------------------------
+//====================================================================================================
+#define DenKr_Thread_ENTRIES_Prefix DENKREMENT_THREAD
+
+#define DenKr_Thread_ENTRIES\
+	GUI,\
+	CONTEXT_BROKER
 
 
 
@@ -131,6 +126,15 @@ typedef enum DenKrement_Thread_IDC_t{
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//====================================================================================================
+//----  Include this at the very last  ---------------------------------------------------------------
+//----  (Include&Define Order matters here)  ---------------------------------------------------------
+#include "DenKr_essentials/threads_codeGeneration.h"
+//----------------------------------------------------------------------------------------------------
+//====================================================================================================
 
 
 

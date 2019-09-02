@@ -10,22 +10,6 @@
 
 #include <global/global_settings.h>
 
-#if defined(DENKR_ESSENTIALS__DL_LIBS__NONE)
-#elif defined(DENKR_ESSENTIALS__DL_LIBS__MAIN_APP)
-	#include "plugins/export/plugins_DenKr_essentials__common.h"
-#elif defined(DENKR_ESSENTIALS__DL_LIBS__PLUGIN_PREDEFINED)
-	//Be cautious with the Resource-Linking (Eclipse) and include-paths (compiler arguments), when compiling a Plugin with set global Value
-	#include "plugins_DenKr_essentials__common.h"
-#elif defined(DENKR_ESSENTIALS__DL_LIBS__PLUGIN_GENERIC)
-	//Generic Plugins/Modules at least need to know the "generic"-role and stuff like the working-modes
-	#include "plugins_DenKr_essentials__common.h"
-#else
-	#pragma error "ERROR: Define either DENKR_ESSENTIALS__DL_LIBS__MAIN_APP or DENKR_ESSENTIALS__DL_LIBS__PLUGIN inside <global/global_settings.h>"
-	ERROR"ERROR: Define either DENKR_ESSENTIALS__DL_LIBS__MAIN_APP or DENKR_ESSENTIALS__DL_LIBS__PLUGIN inside <global/global_settings.h>"
-#endif
-
-
-
 
 //INFO:
 //   The predefined Plugins are spawned as "PTHREAD_CREATE_JOINABLE" (joinable Threads)
@@ -43,11 +27,6 @@
 //FILLING in the content of the additional arguments to pass
 // - In the "Macro Context_Broker__External_Connector_Python__addArgs, you only write, what you would write to fill into a struct
 //    - Assume the 'TARGET' is just a struct of the type you defined a few lines above
-
-
-
-//TODO: Export what is possible into DenKr_essentials
-
 
 
 

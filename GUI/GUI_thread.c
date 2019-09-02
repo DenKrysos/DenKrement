@@ -43,7 +43,7 @@
 //   Format: Use "NAME" for them  -------------------------------------------------
 //---------------------------------------------------------------------------------
 #include "GUI/GTK+/gui_functions.h"
-#include "DenKrement_threads.h"
+#include "DenKr/DenKr_threads.h"
 #include "GUI/GUI_thread.h"
 //---------------------------------------------------------------------------------
 #include "DenKr_essentials/auxiliary.h"
